@@ -7,9 +7,33 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestFilesWalkFileTree {
     public static void main(String[] args) throws IOException {
-        showJars();
     }
 
+    /**
+     * 递归删除目录
+     */
+    private static void deleteDir() throws IOException {
+        Path path = Paths.get("d:\\a");
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>(){
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                Files.delete(file);
+                return super.visitFile(file, attrs);
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                    throws IOException {
+                Files.delete(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
+        });
+    }
+
+    /**
+     * 递归遍历jar包
+     */
     private static void showJars() throws IOException {
         final AtomicInteger jarCnt = new AtomicInteger();
         Files.walkFileTree(Paths.get("D:\\Java\\jdk1.8.0_333"),new SimpleFileVisitor<Path>(){
@@ -25,6 +49,9 @@ public class TestFilesWalkFileTree {
         System.out.println("jar cnt: " + jarCnt);
     }
 
+    /**
+     * 递归遍历所有文件和目录
+     */
     private static void showAll() throws IOException {
         final AtomicInteger dirCnt = new AtomicInteger();
         final AtomicInteger fileCnt = new AtomicInteger();
