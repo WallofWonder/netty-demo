@@ -1,12 +1,10 @@
-package org.example.c1;
+package org.example.c2;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-
-import static org.example.c1.ByteBufferUtil.debugAll;
 
 public class TestGatheringWrites {
     public static void main(String[] args) {

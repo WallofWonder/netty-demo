@@ -1,4 +1,4 @@
-package org.example.c1;
+package org.example.c2;
 
 import lombok.extern.slf4j.Slf4j;
 
