@@ -4,44 +4,39 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.example.c2.ByteBufferUtil.debugRead;
+import java.util.Iterator;
+import java.util.Scanner;
 
 @Slf4j
 public class Server {
     public static void main(String[] args) throws IOException {
-        // =============== 理解阻塞模式 =============
-        // 0. 用于缓存客户端数据
-        ByteBuffer buffer = ByteBuffer.allocate(16);
-        // 1. 创建服务器
-        ServerSocketChannel ssc  = ServerSocketChannel.open();
-        ssc.configureBlocking(false); // 关闭ServerSocketChannel的阻塞模式
-        // 2. 绑定监听端口
+        // 1. 创建 selector, 管理多个 channel
+        Selector selector = Selector.open();
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        ssc.configureBlocking(false);
+
+        // 2. 把 channel 注册到 selector
+        // 事件发生后可以通过 SelectionKey 得到事件发生的信息
+        // 这里 key 只关注 accept 事件
+        SelectionKey sscKey = ssc.register(selector, SelectionKey.OP_ACCEPT, null);
+        log.debug("register key: {}", sscKey);
+
         ssc.bind(new InetSocketAddress(8888));
-        // 3.1 建立连接集合
-        List<SocketChannel> channels = new ArrayList<>();
         while (true) {
-            // 3.2 建立连接, SocketChannel用于通信s
-            SocketChannel sc = ssc.accept(); // 非阻塞，线程继续运行，若没有连接建立，sc为null
-            if (sc != null) {
-                log.debug("Connected...{}" ,sc);
-                sc.configureBlocking(false); // 关闭SocketChannel的阻塞模式
-                channels.add(sc);
-            }
-            for (SocketChannel channel : channels) {
-                // 4. 接收客户端的数据
-                int read = channel.read(buffer);// 非阻塞，没有读到数据则返回0
-                if (read > 0) {
-                    buffer.flip();
-                    debugRead(buffer);
-                    buffer.clear();
-                    log.debug("After reading...{}", channel);
-                }
+            // 3. select 方法，没事件就阻塞，有事件就恢复
+            selector.select();
+            // 4. 处理事件
+            Iterator<SelectionKey> itr = selector.selectedKeys().iterator();
+            while (itr.hasNext()) {
+                SelectionKey key = itr.next();
+                log.debug("key: {}", key);
+                ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+                SocketChannel sc = channel.accept();
+                log.debug("sc: {}", sc);
             }
         }
     }
