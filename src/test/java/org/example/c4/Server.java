@@ -28,15 +28,18 @@ public class Server {
         ssc.bind(new InetSocketAddress(8888));
         while (true) {
             // 3. select 方法，没事件就阻塞，有事件就恢复
+            // select 在事件没有得到处理时不会阻塞
+            // 事件发生后要么处理要么取消，不能不理会
             selector.select();
             // 4. 处理事件
             Iterator<SelectionKey> itr = selector.selectedKeys().iterator();
             while (itr.hasNext()) {
                 SelectionKey key = itr.next();
                 log.debug("key: {}", key);
-                ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+                /*ServerSocketChannel channel = (ServerSocketChannel) key.channel();
                 SocketChannel sc = channel.accept();
-                log.debug("sc: {}", sc);
+                log.debug("sc: {}", sc);*/
+                key.cancel();
             }
         }
     }
