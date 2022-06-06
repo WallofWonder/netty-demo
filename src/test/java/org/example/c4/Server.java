@@ -4,12 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Scanner;
+
+import static org.example.c2.ByteBufferUtil.debugRead;
 
 @Slf4j
 public class Server {
@@ -31,15 +34,30 @@ public class Server {
             // select 在事件没有得到处理时不会阻塞
             // 事件发生后要么处理要么取消，不能不理会
             selector.select();
-            // 4. 处理事件
-            Iterator<SelectionKey> itr = selector.selectedKeys().iterator();
-            while (itr.hasNext()) {
-                SelectionKey key = itr.next();
-                log.debug("key: {}", key);
-                /*ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-                SocketChannel sc = channel.accept();
-                log.debug("sc: {}", sc);*/
-                key.cancel();
+            // 4. 创建 selectedKeys 集合，内部包含了触发了事件的 key，逐个进行处理
+            Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
+            while (iter.hasNext()) {
+                SelectionKey key = iter.next();
+                log.debug("Key: {}", key);
+                // 区分事件类型
+                if (key.isAcceptable()) {
+                    ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+                    SocketChannel sc = channel.accept();
+                    sc.configureBlocking(false);
+                    sc.register(selector, SelectionKey.OP_READ, null);
+                    log.debug("Connection established: {}", sc);
+                } else if (key.isReadable()) {
+                    SocketChannel sc = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(128);
+                    sc.read(buffer);
+                    buffer.flip();
+                    debugRead(buffer);
+                }
+                // 因为 selectedKeys 不会主动将处理过事件的 key 移除
+                // 所以处理完毕，必须将负责监听此事件的 key 移除
+                // 否则下次出现事件的时候，遍历到这个旧 key 会出现问题
+                iter.remove();
+//                key.cancel();
             }
         }
     }
