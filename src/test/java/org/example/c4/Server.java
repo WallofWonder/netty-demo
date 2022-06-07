@@ -10,13 +10,27 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Scanner;
-import java.util.Set;
 
-import static org.example.c2.ByteBufferUtil.debugRead;
+import static org.example.c2.ByteBufferUtil.debugAll;
 
 @Slf4j
 public class Server {
+
+    private static void split(ByteBuffer source) {
+        source.flip();
+        for (int i = 0; i < source.limit(); i++) {
+            if (source.get(i) == '\n') {
+                int length = i + 1 - source.position();
+                ByteBuffer target = ByteBuffer.allocate(length);
+                for (int j = 0; j < length; j++) {
+                    target.put(source.get());
+                }
+                debugAll(target);
+            }
+        }
+        source.compact();
+    }
+
     public static void main(String[] args) throws IOException {
         // 1. 创建 selector, 管理多个 channel
         Selector selector = Selector.open();
@@ -45,24 +59,35 @@ public class Server {
                     ServerSocketChannel channel = (ServerSocketChannel) key.channel();
                     SocketChannel sc = channel.accept();
                     sc.configureBlocking(false);
-                    sc.register(selector, SelectionKey.OP_READ, null);
+                    // 将 buffer 作为附件，绑定到 SelectionKey 上，作为附件
+                    // 让一个 Channel 单独使用一个 buffer，便于实现扩容
+                    ByteBuffer buffer = ByteBuffer.allocate(16);
+                    sc.register(selector, SelectionKey.OP_READ, buffer);
                     log.debug("Connection established: {}", sc);
                 } else if (key.isReadable()) {
-                    // 客户端断开后，也会触发一次 read 事件，key 就是48行获得的 key
                     try {
                         SocketChannel sc = (SocketChannel) key.channel();
-                        ByteBuffer buffer = ByteBuffer.allocate(128);
+                        ByteBuffer buffer = (ByteBuffer) key.attachment();
                         int read = sc.read(buffer);
                         if (read == -1) {
                             // 正常断开的情况，read 为 -1
+                            // 客户端断开后，也会触发一次 read 事件
+                            // key 就是 if (key.isAcceptable()) 里面 register 获得的 key
                             // 要把 key 从 selector 中注销，下次select()的时候会被删除
                             log.debug("Client closed");
                             key.cancel();
                             sc.close();
                         } else {
                             // 普通的 read 事件
-                            buffer.flip();
-                            debugRead(buffer);
+                            split(buffer);
+                            // 如果 split 后 buffer 没变化，说明消息长度超出buffer容量
+                            // 申请一个更大容量的 buffer 作为新的附件
+                            if (buffer.position() == buffer.limit()) {
+                                ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() << 1);
+                                buffer.flip();
+                                newBuffer.put(buffer);
+                                key.attach(newBuffer);
+                            }
                         }
                     } catch (IOException e) {
                         // 异常断开的情况，抛出异常
