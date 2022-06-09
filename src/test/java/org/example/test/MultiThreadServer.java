@@ -48,9 +48,6 @@ public class MultiThreadServer {
         private String name;
         private volatile boolean started = false;
 
-        // 任务队列
-        private ConcurrentLinkedDeque<Runnable> queue = new ConcurrentLinkedDeque<>();
-
         public Worker(String name) {
             this.name = name;
         }
@@ -67,16 +64,11 @@ public class MultiThreadServer {
                 thread.start();
                 started = true;
             }
-            // 在 boss 线程中创建 register 任务但不执行
-            queue.add(() -> {
-                try {
-                    sc.register(this.selector, SelectionKey.OP_READ); // 注册READ事件
-                } catch (ClosedChannelException e) {
-                    e.printStackTrace();
-                }
-            });
             // 先wakeup一次，让worker线程从select()中解除阻塞继续执行
+            // wakeup方法可以先于select()调用当select()方法调用时，如果发现前面调用过wakeup，会直接解除阻塞
+            // 所以select()和这两行怎么组合，都是先register再read
             selector.wakeup();
+            sc.register(this.selector, SelectionKey.OP_READ); // 注册READ事件
         }
 
         @Override
@@ -84,11 +76,6 @@ public class MultiThreadServer {
             while (true) {
                 try {
                     selector.select(); // worker线程中调用
-                    // 在 worker 线程中取出 register 任务执行，
-                    Runnable task = queue.poll();
-                    if (task != null) {
-                        task.run();
-                    }
                     Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
                     while (iter.hasNext()) {
                         SelectionKey key = iter.next();
