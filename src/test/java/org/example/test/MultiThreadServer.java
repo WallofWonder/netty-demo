@@ -1,6 +1,7 @@
 package org.example.test;
 
 import lombok.extern.slf4j.Slf4j;
+import org.omg.SendingContext.RunTime;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -8,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.example.c2.ByteBufferUtil.debugAll;
 
@@ -21,8 +23,12 @@ public class MultiThreadServer {
         Selector bossSel = Selector.open();
         ssc.register(bossSel, SelectionKey.OP_ACCEPT, null);
         ssc.bind(new InetSocketAddress(8888));
-        // 创建固定数量的worker，这里先创建一个，用于处理 read 事件
-        Worker worker = new Worker("worker-0");
+        // 创建cpu核心数量的CPU
+        Worker[] workers = new Worker[Runtime.getRuntime().availableProcessors()];
+        for (int i = 0; i < workers.length; i++) {
+            workers[i] = new Worker("worker-" + i);
+        }
+        AtomicInteger index = new AtomicInteger();
         while (true) {
             bossSel.select();
             Iterator<SelectionKey> iter = bossSel.selectedKeys().iterator();
@@ -35,7 +41,8 @@ public class MultiThreadServer {
                     log.debug("Connected...{}", sc.getRemoteAddress());
                     // 关联 Worker 和 SocketChannel
                     log.debug("Before register...{}", sc.getRemoteAddress());
-                    worker.register(sc);
+                    // round-robin 轮询
+                    workers[index.getAndIncrement() % workers.length].register(sc);
                     log.debug("After register...{}", sc.getRemoteAddress());
                 }
             }
