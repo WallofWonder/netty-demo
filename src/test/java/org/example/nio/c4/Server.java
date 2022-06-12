@@ -1,4 +1,4 @@
-package org.example.c4;
+package org.example.nio.c4;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,7 +11,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
-import static org.example.c2.ByteBufferUtil.debugAll;
+import static org.example.nio.c2.ByteBufferUtil.debugAll;
 
 @Slf4j
 public class Server {

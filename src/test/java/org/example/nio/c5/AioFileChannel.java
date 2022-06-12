@@ -1,4 +1,4 @@
-package org.example.c5;
+package org.example.nio.c5;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,7 +9,7 @@ import java.nio.channels.CompletionHandler;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import static org.example.c2.ByteBufferUtil.debugAll;
+import static org.example.nio.c2.ByteBufferUtil.debugAll;
 
 @Slf4j
 public class AioFileChannel {

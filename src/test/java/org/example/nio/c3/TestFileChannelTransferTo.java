@@ -1,7 +1,6 @@
-package org.example.c3;
+package org.example.nio.c3;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;

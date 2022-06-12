@@ -1,4 +1,4 @@
-package org.example.c3;
+package org.example.nio.c3;
 
 import java.io.IOException;
 import java.nio.file.*;

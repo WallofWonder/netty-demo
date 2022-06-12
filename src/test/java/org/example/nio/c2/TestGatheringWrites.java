@@ -1,4 +1,4 @@
-package org.example.c2;
+package org.example.nio.c2;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

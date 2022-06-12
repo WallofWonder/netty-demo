@@ -1,8 +1,8 @@
-package org.example.c2;
+package org.example.nio.c2;
 
 import java.nio.ByteBuffer;
 
-import static org.example.c2.ByteBufferUtil.debugAll;
+import static org.example.nio.c2.ByteBufferUtil.debugAll;
 
 public class TestByteBufferExam {
     public static void main(String[] args) {
