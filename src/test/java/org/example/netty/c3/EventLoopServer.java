@@ -33,7 +33,7 @@ public class EventLoopServer {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) {
                                 ByteBuf buf = (ByteBuf) msg;
-                                log.debug(buf.toString(StandardCharsets.UTF_8));
+//                                log.debug(buf.toString(StandardCharsets.UTF_8));
                             }
                         });
                     }
