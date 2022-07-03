@@ -2,6 +2,7 @@ package org.example.netty.c3;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 public class EventLoopClient {
     public static void main(String[] args) throws InterruptedException {
-        Channel channel = new Bootstrap()
+        ChannelFuture channelFuture = new Bootstrap()
                 .group(new NioEventLoopGroup())
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<NioSocketChannel>() {
@@ -21,10 +22,12 @@ public class EventLoopClient {
                                 .addLast(new StringEncoder(StandardCharsets.UTF_8)); // 将字符串编码为 ByteBuf
                     }
                 })
-                .connect("localhost", 8888)
-                .sync()
-                .channel();
-        System.out.println(channel);
-        System.out.println();
+                // 异步阻塞方法，main 发起调用，执行 connect 的是 Nio 线程
+                .connect("localhost", 8888);
+        // main 会无阻塞向下执行
+        // 如果没有 sync 方法，write 时可能连接尚未建立
+        channelFuture.sync();
+        Channel channel = channelFuture.channel();
+        channel.writeAndFlush("hello world");
     }
 }
