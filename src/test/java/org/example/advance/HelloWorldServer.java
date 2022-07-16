@@ -18,7 +18,10 @@ public class HelloWorldServer {
         try {
             ChannelFuture channelFuture = new ServerBootstrap()
                     .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.SO_RCVBUF, 10) // 设置接收缓冲区大小为10
+                    // 系统接收缓冲区大小为 （滑动窗口）
+//                    .option(ChannelOption.SO_RCVBUF, 10)
+                    // netty接收缓冲区大小 （ByteBuf）
+                    .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(16, 16, 16))
                     .group(boss, worker)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override

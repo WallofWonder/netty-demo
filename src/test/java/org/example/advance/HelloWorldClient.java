@@ -14,6 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HelloWorldClient {
     public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            send();
+            log.debug("finish...");
+        }
+    }
+
+    private static void send() {
         NioEventLoopGroup worker = new NioEventLoopGroup();
         try {
             ChannelFuture channelFuture = new Bootstrap()
@@ -27,12 +34,10 @@ public class HelloWorldClient {
                                 @Override
                                 public void channelActive(ChannelHandlerContext ctx) throws Exception {
                                     log.debug("sending...");
-                                    // 总共 160 字节数据，分 10 次发送
-                                    for (int i = 0; i < 10; i++) {
-                                        ByteBuf buf = ctx.alloc().buffer(16);
-                                        buf.writeBytes(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-                                        ctx.writeAndFlush(buf);
-                                    }
+                                    ByteBuf buf = ctx.alloc().buffer(16);
+                                    buf.writeBytes(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17});
+                                    ctx.writeAndFlush(buf);
+                                    ctx.channel().close();
                                 }
                             });
                         }
