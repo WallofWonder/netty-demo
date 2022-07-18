@@ -1,4 +1,4 @@
-package org.example.advance;
+package org.example.advance.c1;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -12,7 +12,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HelloWorldClient {
+public class Client1 {
     public static void main(String[] args) {
         for (int i = 0; i < 10; i++) {
             send();

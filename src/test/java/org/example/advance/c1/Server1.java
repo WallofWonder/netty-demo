@@ -1,4 +1,4 @@
-package org.example.advance;
+package org.example.advance.c1;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -10,7 +10,7 @@ import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HelloWorldServer {
+public class Server1 {
     void start() {
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
         NioEventLoopGroup worker = new NioEventLoopGroup();
@@ -56,6 +56,6 @@ public class HelloWorldServer {
     }
 
     public static void main(String[] args) {
-        new HelloWorldServer().start();
+        new Server1().start();
     }
 }
