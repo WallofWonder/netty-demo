@@ -13,7 +13,8 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 
 /**
- * 自定义消息编解码器
+ * 自定义消息编解码器，
+ * 继承自 {@link ByteToMessageCodec} 所以不能被 @Sharable 注解！！！
  */
 @Slf4j
 public class MessageCodec extends ByteToMessageCodec<Message> {
