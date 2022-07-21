@@ -9,9 +9,17 @@ import org.example.massage.LoginRequestMessage;
 
 public class TestMsgCodec {
     public static void main(String[] args) throws Exception {
+        // 这样将 frameDecoder 抽取为一个实例进行复用存在隐患，
+        // frameDecoder 处理带状态的信息，是线程不安全的，可能会把不同线程传来的消息进行拼接
+        // 例子：worker1 和 worker2 同时发送 "1234"，frameDecoder 可能将 worker1 的 12 和 worker2 的 34 拼在一起
+        LengthFieldBasedFrameDecoder frameDecoder = new LengthFieldBasedFrameDecoder(1024, 12, 4, 0, 0);
+        // loggingHandler 处理的是无状态信息，可以抽取为一个实例进行复用
+        // 在源码中 netty 也在可复用的 handler 上添加了 @Sharable 注解进行标记
+        LoggingHandler loggingHandler = new LoggingHandler();
+
         EmbeddedChannel channel = new EmbeddedChannel(
-                new LoggingHandler(),
-                new LengthFieldBasedFrameDecoder(1024, 12, 4, 0, 0),
+                loggingHandler,
+                frameDecoder,
                 new MessageCodec()
         );
         LoginRequestMessage message = new LoginRequestMessage("Zhangsan", "123");
